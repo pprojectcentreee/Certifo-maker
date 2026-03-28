@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certifo Maker - Professional Certificate Generator</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Great+Vibes&family=Lora:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📜</text></svg>">
+</head>
+<body>
+
+    <!-- ===== LOADING SCREEN ===== -->
+    <div id="loading-screen">
+        <div class="loader-content">
+            <div class="loader-icon"><i class="fas fa-certificate fa-spin"></i></div>
+            <h2>Certifo Maker</h2>
+            <p>Loading application...</p>
+        </div>
+    </div>
+
+    <!-- ===== TOAST CONTAINER ===== -->
+    <div id="toast-container"></div>
+
+    <!-- ===== NAVBAR ===== -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <i class="fas fa-certificate"></i>
+            <span>Certifo Maker</span>
+        </div>
+        <button class="nav-toggle" id="navToggle"><i class="fas fa-bars"></i></button>
+        <div class="nav-links" id="navLinks">
+            <a href="#" class="nav-link active" data-section="dashboard">
+                <i class="fas fa-chart-pie"></i> Dashboard
+            </a>
+            <a href="#" class="nav-link" data-section="create">
+                <i class="fas fa-plus-circle"></i> Create
+            </a>
+            <a href="#" class="nav-link" data-section="history">
+                <i class="fas fa-clock-rotate-left"></i> History
+                <span class="badge" id="historyBadge">0</span>
+            </a>
+        </div>
+        <div class="nav-db-status">
+            <span id="dbStatus" class="db-badge db-local">
+                <i class="fas fa-database"></i> Local
+            </span>
+        </div>
+    </nav>
+
+    <!-- ===== SECTION: DASHBOARD ===== -->
+    <section id="section-dashboard" class="page-section active">
+        <div class="container">
+            <div class="section-header">
+                <h1><i class="fas fa-chart-pie"></i> Dashboard</h1>
+                <button class="btn btn-primary" onclick="showSection('create')">
+                    <i class="fas fa-plus"></i> New Certificate
+                </button>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card stat-total">
+                    <div class="stat-icon"><i class="fas fa-certificate"></i></div>
+                    <div class="stat-info">
+                        <h3 id="statTotal">0</h3>
+                        <p>Total Certificates</p>
+                    </div>
+                </div>
+                <div class="stat-card stat-today">
+                    <div class="stat-icon"><i class="fas fa-calendar-day"></i></div>
+                    <div class="stat-info">
+                        <h3 id="statToday">0</h3>
+                        <p>Created Today</p>
+                    </div>
+                </div>
+                <div class="stat-card stat-templates">
+                    <div class="stat-icon"><i class="fas fa-palette"></i></div>
+                    <div class="stat-info">
+                        <h3>4</h3>
+                        <p>Templates</p>
+                    </div>
+                </div>
+                <div class="stat-card stat-downloads">
+                    <div class="stat-icon"><i class="fas fa-file-pdf"></i></div>
+                    <div class="stat-info">
+                        <h3 id="statDownloads">0</h3>
+                        <p>PDFs Generated</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-clock"></i> Recent Certificates</h2>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Recipient</th>
+                                <th>Course</th>
+                                <th>Date</th>
+                                <th>Template</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentBody"></tbody>
+                    </table>
+                    <div class="empty-state" id="recentEmpty">
+                        <i class="fas fa-inbox"></i>
+                        <p>No certificates yet. Create your first one!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SECTION: CREATE ===== -->
+    <section id="section-create" class="page-section">
+        <div class="container">
+            <div class="section-header">
+                <h1><i class="fas fa-plus-circle"></i> Create Certificate</h1>
+            </div>
+
+            <div class="create-layout">
+                <!-- FORM PANEL -->
+                <div class="form-panel card">
+                    <h2><i class="fas fa-edit"></i> Certificate Details</h2>
+
+                    <div class="form-group">
+                        <label>Choose Template</label>
+                        <div class="template-grid">
+                            <div class="template-option active" data-template="classic" onclick="selectTemplate('classic')">
+                                <div class="template-thumb thumb-classic">
+                                    <span>Aa</span>
+                                </div>
+                                <span>Classic Gold</span>
+                            </div>
+                            <div class="template-option" data-template="modern" onclick="selectTemplate('modern')">
+                                <div class="template-thumb thumb-modern">
+                                    <span>Aa</span>
+                                </div>
+                                <span>Modern Blue</span>
+                            </div>
+                            <div class="template-option" data-template="elegant" onclick="selectTemplate('elegant')">
+                                <div class="template-thumb thumb-elegant">
+                                    <span>Aa</span>
+                                </div>
+                                <span>Elegant Green</span>
+                            </div>
+                            <div class="template-option" data-template="royal" onclick="selectTemplate('royal')">
+                                <div class="template-thumb thumb-royal">
+                                    <span>Aa</span>
+                                </div>
+                                <span>Royal Purple</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="certType"><i class="fas fa-tag"></i> Certificate Type</label>
+                        <select id="certType" onchange="updatePreview()">
+                            <option value="Achievement">Certificate of Achievement</option>
+                            <option value="Completion">Certificate of Completion</option>
+                            <option value="Appreciation">Certificate of Appreciation</option>
+                            <option value="Excellence">Certificate of Excellence</option>
+                            <option value="Participation">Certificate of Participation</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="recipientName"><i class="fas fa-user"></i> Recipient Name *</label>
+                        <input type="text" id="recipientName" placeholder="e.g. John Doe" oninput="updatePreview()" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="courseName"><i class="fas fa-book"></i> Course / Program *</label>
+                        <input type="text" id="courseName" placeholder="e.g. Web Development Masterclass" oninput="updatePreview()" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description"><i class="fas fa-align-left"></i> Description (optional)</label>
+                        <textarea id="description" rows="2" placeholder="e.g. Demonstrated outstanding skills..." oninput="updatePreview()"></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="issueDate"><i class="fas fa-calendar"></i> Date *</label>
+                            <input type="date" id="issueDate" onchange="updatePreview()" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="orgName"><i class="fas fa-building"></i> Organization *</label>
+                            <input type="text" id="orgName" placeholder="e.g. Tech Academy" oninput="updatePreview()" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="issuerName"><i class="fas fa-signature"></i> Issuer / Signer *</label>
+                        <input type="text" id="issuerName" placeholder="e.g. Jane Smith" oninput="updatePreview()" required>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-primary btn-lg" id="btnGenerate" onclick="generateAndSave()">
+                            <i class="fas fa-file-pdf"></i> Generate PDF & Save
+                        </button>
+                        <button type="button" class="btn btn-outline" onclick="clearForm()">
+                            <i class="fas fa-eraser"></i> Clear
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PREVIEW PANEL -->
+                <div class="preview-panel">
+                    <h2><i class="fas fa-eye"></i> Live Preview</h2>
+                    <div class="preview-container" id="previewContainer">
+                        <div class="preview-scaler" id="previewScaler">
+
+                            <!-- ======= THE CERTIFICATE ======= -->
+                            <div id="certificatePreview" class="certificate template-classic">
+                                <div class="cert-outer">
+                                    <div class="cert-inner">
+
+                                        <div class="cert-corner cert-tl">❖</div>
+                                        <div class="cert-corner cert-tr">❖</div>
+                                        <div class="cert-corner cert-bl">❖</div>
+                                        <div class="cert-corner cert-br">❖</div>
+
+                                        <div class="cert-header">
+                                            <div class="cert-org-name" id="prevOrg">Your Organization</div>
+                                            <div class="cert-star">★</div>
+                                            <h1 class="cert-title">CERTIFICATE</h1>
+                                            <div class="cert-of" id="prevType">OF ACHIEVEMENT</div>
+                                            <div class="cert-line-deco">
+                                                <span class="line-side"></span>
+                                                <span class="line-diamond">◆</span>
+                                                <span class="line-side"></span>
+                                            </div>
+                                        </div>
+
+                                        <div class="cert-body">
+                                            <p class="cert-presented">This certificate is proudly presented to</p>
+                                            <h2 class="cert-recipient" id="prevName">Recipient Name</h2>
+                                            <div class="cert-underline"></div>
+                                            <p class="cert-for">for successfully completing</p>
+                                            <h3 class="cert-course" id="prevCourse">Course / Program Name</h3>
+                                            <p class="cert-desc" id="prevDesc"></p>
+                                        </div>
+
+                                        <div class="cert-footer">
+                                            <div class="cert-sign-block">
+                                                <div class="cert-sign-line"></div>
+                                                <p class="cert-sign-name" id="prevIssuer">Issuer Name</p>
+                                                <p class="cert-sign-role">Authorized Signatory</p>
+                                            </div>
+                                            <div class="cert-seal-block">
+                                                <div class="cert-seal">
+                                                    <div class="cert-seal-inner">★</div>
+                                                </div>
+                                            </div>
+                                            <div class="cert-date-block">
+                                                <div class="cert-sign-line"></div>
+                                                <p class="cert-date-val" id="prevDate">Date</p>
+                                                <p class="cert-sign-role">Date of Issue</p>
+                                            </div>
+                                        </div>
+
+                                        <div class="cert-id" id="prevId">ID: CERT-00000000-0001</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- ======= END CERTIFICATE ======= -->
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SECTION: HISTORY ===== -->
+    <section id="section-history" class="page-section">
+        <div class="container">
+            <div class="section-header">
+                <h1><i class="fas fa-clock-rotate-left"></i> Certificate History</h1>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search by name, course, ID..." oninput="searchCertificates()">
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>All Certificates</h2>
+                    <span class="count-badge" id="historyCount">0 records</span>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Certificate ID</th>
+                                <th>Recipient</th>
+                                <th>Course</th>
+                                <th>Organization</th>
+                                <th>Date</th>
+                                <th>Template</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyBody"></tbody>
+                    </table>
+                    <div class="empty-state" id="historyEmpty">
+                        <i class="fas fa-folder-open"></i>
+                        <p>No certificates found</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="footer">
+        <p>© 2024 <strong>Certifo Maker</strong> — Professional Certificate Generator</p>
+    </footer>
+
+    <!-- ===== SCRIPTS ===== -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Firebase (optional) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
