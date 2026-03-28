@@ -13,19 +13,45 @@
 </head>
 <body>
 
-    <!-- ===== LOADING SCREEN ===== -->
+    <!-- LOADING SCREEN -->
     <div id="loading-screen">
         <div class="loader-content">
             <div class="loader-icon"><i class="fas fa-certificate fa-spin"></i></div>
             <h2>Certifo Maker</h2>
-            <p>Loading application...</p>
+            <p>Connecting to database...</p>
+            <div class="loader-bar"><div class="loader-fill"></div></div>
         </div>
     </div>
 
-    <!-- ===== TOAST CONTAINER ===== -->
+    <!-- TOAST CONTAINER -->
     <div id="toast-container"></div>
 
-    <!-- ===== NAVBAR ===== -->
+    <!-- MODAL FOR VIEW/REDOWNLOAD -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-eye"></i> Certificate Preview</h2>
+                <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-preview-container" id="modalPreviewContainer">
+                    <div class="modal-preview-scaler" id="modalPreviewScaler">
+                        <!-- Certificate clone goes here -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="btnRedownload" onclick="redownloadPDF()">
+                    <i class="fas fa-file-pdf"></i> Download PDF
+                </button>
+                <button class="btn btn-outline" onclick="closeModal()">
+                    <i class="fas fa-times"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NAVBAR -->
     <nav class="navbar">
         <div class="nav-brand">
             <i class="fas fa-certificate"></i>
@@ -45,13 +71,13 @@
             </a>
         </div>
         <div class="nav-db-status">
-            <span id="dbStatus" class="db-badge db-local">
-                <i class="fas fa-database"></i> Local
+            <span id="dbStatus" class="db-badge db-loading">
+                <i class="fas fa-spinner fa-spin"></i> Connecting...
             </span>
         </div>
     </nav>
 
-    <!-- ===== SECTION: DASHBOARD ===== -->
+    <!-- SECTION: DASHBOARD -->
     <section id="section-dashboard" class="page-section active">
         <div class="container">
             <div class="section-header">
@@ -87,22 +113,27 @@
                     <div class="stat-icon"><i class="fas fa-file-pdf"></i></div>
                     <div class="stat-info">
                         <h3 id="statDownloads">0</h3>
-                        <p>PDFs Generated</p>
+                        <p>PDFs Downloaded</p>
                     </div>
                 </div>
             </div>
 
+            <!-- RECENT CERTIFICATES -->
             <div class="card">
                 <div class="card-header">
                     <h2><i class="fas fa-clock"></i> Recent Certificates</h2>
+                    <button class="btn btn-outline btn-sm" onclick="showSection('history')">
+                        View All <i class="fas fa-arrow-right"></i>
+                    </button>
                 </div>
                 <div class="table-wrapper">
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>Certificate ID</th>
                                 <th>Recipient</th>
                                 <th>Course</th>
+                                <th>Organization</th>
                                 <th>Date</th>
                                 <th>Template</th>
                             </tr>
@@ -112,13 +143,16 @@
                     <div class="empty-state" id="recentEmpty">
                         <i class="fas fa-inbox"></i>
                         <p>No certificates yet. Create your first one!</p>
+                        <button class="btn btn-primary" onclick="showSection('create')" style="margin-top:15px;">
+                            <i class="fas fa-plus"></i> Create Certificate
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- ===== SECTION: CREATE ===== -->
+    <!-- SECTION: CREATE -->
     <section id="section-create" class="page-section">
         <div class="container">
             <div class="section-header">
@@ -134,27 +168,19 @@
                         <label>Choose Template</label>
                         <div class="template-grid">
                             <div class="template-option active" data-template="classic" onclick="selectTemplate('classic')">
-                                <div class="template-thumb thumb-classic">
-                                    <span>Aa</span>
-                                </div>
+                                <div class="template-thumb thumb-classic"><span>Aa</span></div>
                                 <span>Classic Gold</span>
                             </div>
                             <div class="template-option" data-template="modern" onclick="selectTemplate('modern')">
-                                <div class="template-thumb thumb-modern">
-                                    <span>Aa</span>
-                                </div>
+                                <div class="template-thumb thumb-modern"><span>Aa</span></div>
                                 <span>Modern Blue</span>
                             </div>
                             <div class="template-option" data-template="elegant" onclick="selectTemplate('elegant')">
-                                <div class="template-thumb thumb-elegant">
-                                    <span>Aa</span>
-                                </div>
+                                <div class="template-thumb thumb-elegant"><span>Aa</span></div>
                                 <span>Elegant Green</span>
                             </div>
                             <div class="template-option" data-template="royal" onclick="selectTemplate('royal')">
-                                <div class="template-thumb thumb-royal">
-                                    <span>Aa</span>
-                                </div>
+                                <div class="template-thumb thumb-royal"><span>Aa</span></div>
                                 <span>Royal Purple</span>
                             </div>
                         </div>
@@ -168,38 +194,46 @@
                             <option value="Appreciation">Certificate of Appreciation</option>
                             <option value="Excellence">Certificate of Excellence</option>
                             <option value="Participation">Certificate of Participation</option>
+                            <option value="Training">Certificate of Training</option>
+                            <option value="Merit">Certificate of Merit</option>
                         </select>
                     </div>
 
                     <div class="form-group">
                         <label for="recipientName"><i class="fas fa-user"></i> Recipient Name *</label>
-                        <input type="text" id="recipientName" placeholder="e.g. John Doe" oninput="updatePreview()" required>
+                        <input type="text" id="recipientName" placeholder="e.g. John Doe" oninput="updatePreview()" maxlength="50">
                     </div>
 
                     <div class="form-group">
                         <label for="courseName"><i class="fas fa-book"></i> Course / Program *</label>
-                        <input type="text" id="courseName" placeholder="e.g. Web Development Masterclass" oninput="updatePreview()" required>
+                        <input type="text" id="courseName" placeholder="e.g. Web Development Masterclass" oninput="updatePreview()" maxlength="60">
                     </div>
 
                     <div class="form-group">
                         <label for="description"><i class="fas fa-align-left"></i> Description (optional)</label>
-                        <textarea id="description" rows="2" placeholder="e.g. Demonstrated outstanding skills..." oninput="updatePreview()"></textarea>
+                        <textarea id="description" rows="2" placeholder="e.g. Demonstrated outstanding skills and dedication throughout the program..." oninput="updatePreview()" maxlength="200"></textarea>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="issueDate"><i class="fas fa-calendar"></i> Date *</label>
-                            <input type="date" id="issueDate" onchange="updatePreview()" required>
+                            <label for="issueDate"><i class="fas fa-calendar"></i> Issue Date *</label>
+                            <input type="date" id="issueDate" onchange="updatePreview()">
                         </div>
                         <div class="form-group">
                             <label for="orgName"><i class="fas fa-building"></i> Organization *</label>
-                            <input type="text" id="orgName" placeholder="e.g. Tech Academy" oninput="updatePreview()" required>
+                            <input type="text" id="orgName" placeholder="e.g. Tech Academy" oninput="updatePreview()" maxlength="40">
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="issuerName"><i class="fas fa-signature"></i> Issuer / Signer *</label>
-                        <input type="text" id="issuerName" placeholder="e.g. Jane Smith" oninput="updatePreview()" required>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="issuerName"><i class="fas fa-signature"></i> Issuer / Signer *</label>
+                            <input type="text" id="issuerName" placeholder="e.g. Jane Smith" oninput="updatePreview()" maxlength="40">
+                        </div>
+                        <div class="form-group">
+                            <label for="issuerTitle"><i class="fas fa-id-badge"></i> Issuer Title</label>
+                            <input type="text" id="issuerTitle" placeholder="e.g. Director" oninput="updatePreview()" maxlength="30" value="Authorized Signatory">
+                        </div>
                     </div>
 
                     <div class="form-actions">
@@ -214,15 +248,18 @@
 
                 <!-- PREVIEW PANEL -->
                 <div class="preview-panel">
-                    <h2><i class="fas fa-eye"></i> Live Preview</h2>
+                    <div class="preview-header">
+                        <h2><i class="fas fa-eye"></i> Live Preview</h2>
+                        <span class="preview-size">800 × 566px (A4 Landscape)</span>
+                    </div>
                     <div class="preview-container" id="previewContainer">
                         <div class="preview-scaler" id="previewScaler">
 
                             <!-- ======= THE CERTIFICATE ======= -->
                             <div id="certificatePreview" class="certificate template-classic">
+                                <div class="cert-watermark">★</div>
                                 <div class="cert-outer">
                                     <div class="cert-inner">
-
                                         <div class="cert-corner cert-tl">❖</div>
                                         <div class="cert-corner cert-tr">❖</div>
                                         <div class="cert-corner cert-bl">❖</div>
@@ -253,7 +290,7 @@
                                             <div class="cert-sign-block">
                                                 <div class="cert-sign-line"></div>
                                                 <p class="cert-sign-name" id="prevIssuer">Issuer Name</p>
-                                                <p class="cert-sign-role">Authorized Signatory</p>
+                                                <p class="cert-sign-role" id="prevIssuerTitle">Authorized Signatory</p>
                                             </div>
                                             <div class="cert-seal-block">
                                                 <div class="cert-seal">
@@ -280,26 +317,32 @@
         </div>
     </section>
 
-    <!-- ===== SECTION: HISTORY ===== -->
+    <!-- SECTION: HISTORY -->
     <section id="section-history" class="page-section">
         <div class="container">
             <div class="section-header">
                 <h1><i class="fas fa-clock-rotate-left"></i> Certificate History</h1>
-                <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="searchInput" placeholder="Search by name, course, ID..." oninput="searchCertificates()">
+                <div class="header-actions">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" placeholder="Search name, course, ID..." oninput="searchCertificates()">
+                    </div>
+                    <button class="btn btn-danger btn-sm" id="btnClearAll" onclick="clearAllCerts()" style="display:none;">
+                        <i class="fas fa-trash-alt"></i> Clear All
+                    </button>
                 </div>
             </div>
 
             <div class="card">
                 <div class="card-header">
-                    <h2>All Certificates</h2>
+                    <h2><i class="fas fa-list"></i> All Certificates</h2>
                     <span class="count-badge" id="historyCount">0 records</span>
                 </div>
                 <div class="table-wrapper">
                     <table class="data-table">
                         <thead>
                             <tr>
+                                <th>#</th>
                                 <th>Certificate ID</th>
                                 <th>Recipient</th>
                                 <th>Course</th>
@@ -314,23 +357,31 @@
                     <div class="empty-state" id="historyEmpty">
                         <i class="fas fa-folder-open"></i>
                         <p>No certificates found</p>
+                        <button class="btn btn-primary" onclick="showSection('create')" style="margin-top:15px;">
+                            <i class="fas fa-plus"></i> Create Certificate
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- ===== FOOTER ===== -->
+    <!-- FOOTER -->
     <footer class="footer">
-        <p>© 2024 <strong>Certifo Maker</strong> — Professional Certificate Generator</p>
+        <div class="footer-content">
+            <p>© 2024 <strong>Certifo Maker</strong> — Professional Certificate Generator</p>
+            <p class="footer-sub">Built with <i class="fas fa-heart" style="color:#e17055;"></i> | Powered by Firebase</p>
+        </div>
     </footer>
 
-    <!-- ===== SCRIPTS ===== -->
+    <!-- SCRIPTS (CDN) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <!-- Firebase (optional) -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <!-- Firebase CDN (Compat version for non-module usage) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
     <script src="app.js"></script>
 </body>
 </html>
