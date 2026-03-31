@@ -3,22 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Certifo Maker - Professional Certificate Generator</title>
+    <title>Ellectra - Workshop Certificate Generator</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Great+Vibes&family=Lora:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Great+Vibes&family=Lora:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:wght@400;700;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📜</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
 </head>
 <body>
 
     <!-- LOADING SCREEN -->
     <div id="loading-screen">
         <div class="loader-content">
-            <div class="loader-icon"><i class="fas fa-certificate fa-spin"></i></div>
-            <h2>Certifo Maker</h2>
-            <p>Connecting to database...</p>
+            <div class="loader-icon">
+                <img src="https://raw.githubusercontent.com/pprojectcentreee/Ellectra/main/Ellectra_w01wap%20(2).png" alt="Ellectra Logo" class="loader-logo-img">
+            </div>
+            <h2>Ellectra</h2>
+            <p>Workshop Certificate Generator</p>
             <div class="loader-bar"><div class="loader-fill"></div></div>
         </div>
     </div>
@@ -36,7 +38,6 @@
             <div class="modal-body">
                 <div class="modal-preview-container" id="modalPreviewContainer">
                     <div class="modal-preview-scaler" id="modalPreviewScaler">
-                        <!-- Certificate clone goes here -->
                     </div>
                 </div>
             </div>
@@ -54,8 +55,8 @@
     <!-- NAVBAR -->
     <nav class="navbar">
         <div class="nav-brand">
-            <i class="fas fa-certificate"></i>
-            <span>Certifo Maker</span>
+            <img src="https://raw.githubusercontent.com/pprojectcentreee/Ellectra/main/Ellectra_w01wap%20(2).png" alt="Ellectra" class="nav-logo-img">
+            <span>Ellectra</span>
         </div>
         <button class="nav-toggle" id="navToggle"><i class="fas fa-bars"></i></button>
         <div class="nav-links" id="navLinks">
@@ -105,8 +106,8 @@
                 <div class="stat-card stat-templates">
                     <div class="stat-icon"><i class="fas fa-palette"></i></div>
                     <div class="stat-info">
-                        <h3>4</h3>
-                        <p>Templates</p>
+                        <h3>2</h3>
+                        <p>Certificate Types</p>
                     </div>
                 </div>
                 <div class="stat-card stat-downloads">
@@ -132,10 +133,10 @@
                             <tr>
                                 <th>Certificate ID</th>
                                 <th>Recipient</th>
-                                <th>Course</th>
-                                <th>Organization</th>
+                                <th>Workshop</th>
+                                <th>Institution</th>
                                 <th>Date</th>
-                                <th>Template</th>
+                                <th>Type</th>
                             </tr>
                         </thead>
                         <tbody id="recentBody"></tbody>
@@ -156,13 +157,45 @@
     <section id="section-create" class="page-section">
         <div class="container">
             <div class="section-header">
-                <h1><i class="fas fa-plus-circle"></i> Create Certificate</h1>
+                <h1><i class="fas fa-plus-circle"></i> Create Workshop Certificate</h1>
             </div>
 
             <div class="create-layout">
                 <!-- FORM PANEL -->
                 <div class="form-panel card">
                     <h2><i class="fas fa-edit"></i> Certificate Details</h2>
+
+                    <!-- Certificate Type: Participant vs Winner -->
+                    <div class="form-group">
+                        <label><i class="fas fa-award"></i> Certificate For</label>
+                        <div class="cert-type-selector">
+                            <div class="cert-type-option active" data-certfor="participant" onclick="selectCertFor('participant')">
+                                <div class="cert-type-icon participant-icon">
+                                    <i class="fas fa-user-check"></i>
+                                </div>
+                                <span>Participant</span>
+                            </div>
+                            <div class="cert-type-option" data-certfor="winner" onclick="selectCertFor('winner')">
+                                <div class="cert-type-icon winner-icon">
+                                    <i class="fas fa-trophy"></i>
+                                </div>
+                                <span>Winner</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Winner Position (hidden by default) -->
+                    <div class="form-group" id="winnerPositionGroup" style="display:none;">
+                        <label for="winnerPosition"><i class="fas fa-medal"></i> Winner Position *</label>
+                        <select id="winnerPosition" onchange="updatePreview()">
+                            <option value="1st Place">1st Place - Gold</option>
+                            <option value="2nd Place">2nd Place - Silver</option>
+                            <option value="3rd Place">3rd Place - Bronze</option>
+                            <option value="Best Project">Best Project Award</option>
+                            <option value="Best Innovation">Best Innovation Award</option>
+                            <option value="Overall Winner">Overall Winner</option>
+                        </select>
+                    </div>
 
                     <div class="form-group">
                         <label>Choose Template</label>
@@ -187,52 +220,49 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="certType"><i class="fas fa-tag"></i> Certificate Type</label>
-                        <select id="certType" onchange="updatePreview()">
-                            <option value="Achievement">Certificate of Achievement</option>
-                            <option value="Completion">Certificate of Completion</option>
-                            <option value="Appreciation">Certificate of Appreciation</option>
-                            <option value="Excellence">Certificate of Excellence</option>
-                            <option value="Participation">Certificate of Participation</option>
-                            <option value="Training">Certificate of Training</option>
-                            <option value="Merit">Certificate of Merit</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="recipientName"><i class="fas fa-user"></i> Recipient Name *</label>
+                        <label for="recipientName"><i class="fas fa-user"></i> Participant / Winner Name *</label>
                         <input type="text" id="recipientName" placeholder="e.g. John Doe" oninput="updatePreview()" maxlength="50">
                     </div>
 
                     <div class="form-group">
-                        <label for="courseName"><i class="fas fa-book"></i> Course / Program *</label>
-                        <input type="text" id="courseName" placeholder="e.g. Web Development Masterclass" oninput="updatePreview()" maxlength="60">
+                        <label for="workshopType"><i class="fas fa-tools"></i> Workshop Type *</label>
+                        <input type="text" id="workshopType" placeholder="e.g. IoT Workshop, Web Development, Robotics..." oninput="updatePreview()" maxlength="60">
                     </div>
 
                     <div class="form-group">
-                        <label for="description"><i class="fas fa-align-left"></i> Description (optional)</label>
-                        <textarea id="description" rows="2" placeholder="e.g. Demonstrated outstanding skills and dedication throughout the program..." oninput="updatePreview()" maxlength="200"></textarea>
+                        <label for="workshopName"><i class="fas fa-book"></i> Workshop Name / Title *</label>
+                        <input type="text" id="workshopName" placeholder="e.g. Building Smart IoT Systems" oninput="updatePreview()" maxlength="60">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="institutionName"><i class="fas fa-university"></i> Institution / School / College *</label>
+                        <input type="text" id="institutionName" placeholder="e.g. St. Xavier's Engineering College" oninput="updatePreview()" maxlength="60">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description"><i class="fas fa-align-left"></i> Additional Details (optional)</label>
+                        <textarea id="description" rows="2" placeholder="e.g. Demonstrated outstanding skills during the 2-day intensive workshop..." oninput="updatePreview()" maxlength="200"></textarea>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="issueDate"><i class="fas fa-calendar"></i> Issue Date *</label>
-                            <input type="date" id="issueDate" onchange="updatePreview()">
+                            <label for="workshopDate"><i class="fas fa-calendar"></i> Workshop Date *</label>
+                            <input type="date" id="workshopDate" onchange="updatePreview()">
                         </div>
                         <div class="form-group">
-                            <label for="orgName"><i class="fas fa-building"></i> Organization *</label>
-                            <input type="text" id="orgName" placeholder="e.g. Tech Academy" oninput="updatePreview()" maxlength="40">
+                            <label for="orgName"><i class="fas fa-building"></i> Organized By</label>
+                            <input type="text" id="orgName" placeholder="Ellectra" oninput="updatePreview()" maxlength="40" value="Ellectra">
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="issuerName"><i class="fas fa-signature"></i> Issuer / Signer *</label>
-                            <input type="text" id="issuerName" placeholder="e.g. Jane Smith" oninput="updatePreview()" maxlength="40">
+                            <label for="issuerName"><i class="fas fa-signature"></i> Signed By *</label>
+                            <input type="text" id="issuerName" placeholder="e.g. Dr. Jane Smith" oninput="updatePreview()" maxlength="40">
                         </div>
                         <div class="form-group">
-                            <label for="issuerTitle"><i class="fas fa-id-badge"></i> Issuer Title</label>
-                            <input type="text" id="issuerTitle" placeholder="e.g. Director" oninput="updatePreview()" maxlength="30" value="Authorized Signatory">
+                            <label for="issuerTitle"><i class="fas fa-id-badge"></i> Signer Designation</label>
+                            <input type="text" id="issuerTitle" placeholder="e.g. Workshop Coordinator" oninput="updatePreview()" maxlength="30" value="Workshop Coordinator">
                         </div>
                     </div>
 
@@ -255,9 +285,9 @@
                     <div class="preview-container" id="previewContainer">
                         <div class="preview-scaler" id="previewScaler">
 
-                            <!-- ======= THE CERTIFICATE ======= -->
-                            <div id="certificatePreview" class="certificate template-classic">
-                                <div class="cert-watermark">★</div>
+                            <!-- ======= THE PARTICIPANT CERTIFICATE ======= -->
+                            <div id="certificatePreview" class="certificate template-classic cert-participant">
+                                <div class="cert-watermark">⚡</div>
                                 <div class="cert-outer">
                                     <div class="cert-inner">
                                         <div class="cert-corner cert-tl">❖</div>
@@ -265,46 +295,51 @@
                                         <div class="cert-corner cert-bl">❖</div>
                                         <div class="cert-corner cert-br">❖</div>
 
+                                        <!-- Logo & Header -->
                                         <div class="cert-header">
-                                            <div class="cert-org-name" id="prevOrg">Your Organization</div>
-                                            <div class="cert-star">★</div>
+                                            <div class="cert-logo-row">
+                                                <img src="https://raw.githubusercontent.com/pprojectcentreee/Ellectra/main/Ellectra_w01wap%20(2).png" alt="Ellectra" class="cert-logo-img" crossorigin="anonymous">
+                                            </div>
+                                            <div class="cert-org-name" id="prevOrg">Ellectra</div>
+                                            <div class="cert-workshop-type-label" id="prevWorkshopType">Workshop Certificate</div>
                                             <h1 class="cert-title">CERTIFICATE</h1>
-                                            <div class="cert-of" id="prevType">OF ACHIEVEMENT</div>
+                                            <div class="cert-of" id="prevType">OF PARTICIPATION</div>
                                             <div class="cert-line-deco">
                                                 <span class="line-side"></span>
-                                                <span class="line-diamond">◆</span>
+                                                <span class="line-diamond">⚡</span>
                                                 <span class="line-side"></span>
                                             </div>
                                         </div>
 
                                         <div class="cert-body">
                                             <p class="cert-presented">This certificate is proudly presented to</p>
-                                            <h2 class="cert-recipient" id="prevName">Recipient Name</h2>
+                                            <h2 class="cert-recipient" id="prevName">Participant Name</h2>
                                             <div class="cert-underline"></div>
-                                            <p class="cert-for">for successfully completing</p>
-                                            <h3 class="cert-course" id="prevCourse">Course / Program Name</h3>
+                                            <p class="cert-for">for successfully participating in the workshop</p>
+                                            <h3 class="cert-course" id="prevWorkshopName">Workshop Name</h3>
+                                            <p class="cert-institution" id="prevInstitution">Conducted at: Institution Name</p>
                                             <p class="cert-desc" id="prevDesc"></p>
                                         </div>
 
                                         <div class="cert-footer">
                                             <div class="cert-sign-block">
                                                 <div class="cert-sign-line"></div>
-                                                <p class="cert-sign-name" id="prevIssuer">Issuer Name</p>
-                                                <p class="cert-sign-role" id="prevIssuerTitle">Authorized Signatory</p>
+                                                <p class="cert-sign-name" id="prevIssuer">Signer Name</p>
+                                                <p class="cert-sign-role" id="prevIssuerTitle">Workshop Coordinator</p>
                                             </div>
                                             <div class="cert-seal-block">
                                                 <div class="cert-seal">
-                                                    <div class="cert-seal-inner">★</div>
+                                                    <div class="cert-seal-inner">⚡</div>
                                                 </div>
                                             </div>
                                             <div class="cert-date-block">
                                                 <div class="cert-sign-line"></div>
                                                 <p class="cert-date-val" id="prevDate">Date</p>
-                                                <p class="cert-sign-role">Date of Issue</p>
+                                                <p class="cert-sign-role">Workshop Date</p>
                                             </div>
                                         </div>
 
-                                        <div class="cert-id" id="prevId">ID: CERT-00000000-0001</div>
+                                        <div class="cert-id" id="prevId">ID: ELLEC-00000000-0001</div>
                                     </div>
                                 </div>
                             </div>
@@ -325,7 +360,7 @@
                 <div class="header-actions">
                     <div class="search-box">
                         <i class="fas fa-search"></i>
-                        <input type="text" id="searchInput" placeholder="Search name, course, ID..." oninput="searchCertificates()">
+                        <input type="text" id="searchInput" placeholder="Search name, workshop, ID..." oninput="searchCertificates()">
                     </div>
                     <button class="btn btn-danger btn-sm" id="btnClearAll" onclick="clearAllCerts()" style="display:none;">
                         <i class="fas fa-trash-alt"></i> Clear All
@@ -345,10 +380,10 @@
                                 <th>#</th>
                                 <th>Certificate ID</th>
                                 <th>Recipient</th>
-                                <th>Course</th>
-                                <th>Organization</th>
+                                <th>Workshop</th>
+                                <th>Institution</th>
                                 <th>Date</th>
-                                <th>Template</th>
+                                <th>Type</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -369,19 +404,17 @@
     <!-- FOOTER -->
     <footer class="footer">
         <div class="footer-content">
-            <p>© 2024 <strong>Certifo Maker</strong> — Professional Certificate Generator</p>
-            <p class="footer-sub">Built with <i class="fas fa-heart" style="color:#e17055;"></i> | Powered by Firebase</p>
+            <p>© 2024 <strong>Ellectra</strong> — Workshop Certificate Generator</p>
+            <p class="footer-sub">Built with <i class="fas fa-heart" style="color:#e17055;"></i> | Powered by Ellectra</p>
         </div>
     </footer>
 
     <!-- SCRIPTS (CDN) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-    <!-- Firebase CDN (Compat version for non-module usage) -->
+    <!-- Firebase CDN -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
     <script src="app.js"></script>
 </body>
 </html>
