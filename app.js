@@ -1,10 +1,10 @@
 /* ============================================
-   CERTIFO MAKER — Application Logic
+   ELLECTRA — Workshop Certificate Generator
    Firebase Firestore + localStorage fallback
    ============================================ */
 
 // ═══════════════════════════════════════════
-//  FIREBASE CONFIGURATION (YOUR PROJECT)
+// FIREBASE CONFIGURATION
 // ═══════════════════════════════════════════
 const firebaseConfig = {
     apiKey: "AIzaSyBsDRgNuzGF9tlIR42vAnXhNagpc6Nqyiw",
@@ -16,7 +16,7 @@ const firebaseConfig = {
 };
 
 // ═══════════════════════════════════════════
-//  DATABASE INITIALIZATION
+// DATABASE INITIALIZATION
 // ═══════════════════════════════════════════
 let db = null;
 let useFirebase = false;
@@ -25,18 +25,15 @@ function initFirebase() {
     try {
         firebase.initializeApp(firebaseConfig);
         db = firebase.firestore();
-
-        // Enable offline persistence
         db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
             console.warn("Persistence error:", err.code);
         });
-
         useFirebase = true;
-        console.log("✅ Firebase Firestore connected successfully!");
+        console.log("✅ Firebase Firestore connected!");
         updateDbBadge("firebase");
         return true;
     } catch (error) {
-        console.error("❌ Firebase initialization failed:", error);
+        console.error("❌ Firebase init failed:", error);
         updateDbBadge("error");
         return false;
     }
@@ -64,11 +61,9 @@ function updateDbBadge(status) {
 }
 
 // ═══════════════════════════════════════════
-//  STORAGE ABSTRACTION LAYER
+// STORAGE ABSTRACTION LAYER
 // ═══════════════════════════════════════════
 const Storage = {
-
-    // --- SAVE CERTIFICATE ---
     async save(certData) {
         if (useFirebase) {
             try {
@@ -77,10 +72,9 @@ const Storage = {
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                     createdAtLocal: new Date().toISOString()
                 });
-                console.log("📄 Saved to Firebase with ID:", docRef.id);
                 return docRef.id;
             } catch (error) {
-                console.error("Firebase save error, falling back to local:", error);
+                console.error("Firebase save error:", error);
                 return this._saveLocal(certData);
             }
         } else {
@@ -89,29 +83,23 @@ const Storage = {
     },
 
     _saveLocal(certData) {
-        const certs = JSON.parse(localStorage.getItem("certifo_certs") || "[]");
+        const certs = JSON.parse(localStorage.getItem("ellectra_certs") || "[]");
         certData._localId = "local_" + Date.now() + "_" + Math.random().toString(36).substr(2, 6);
         certData.createdAt = new Date().toISOString();
         certData.createdAtLocal = new Date().toISOString();
         certs.push(certData);
-        localStorage.setItem("certifo_certs", JSON.stringify(certs));
-        console.log("📄 Saved to localStorage with ID:", certData._localId);
+        localStorage.setItem("ellectra_certs", JSON.stringify(certs));
         return certData._localId;
     },
 
-    // --- GET ALL CERTIFICATES ---
     async getAll() {
         if (useFirebase) {
             try {
                 const snapshot = await db.collection("certificates")
                     .orderBy("createdAt", "desc")
                     .get();
-                return snapshot.docs.map(doc => ({
-                    _docId: doc.id,
-                    ...doc.data()
-                }));
+                return snapshot.docs.map(doc => ({ _docId: doc.id, ...doc.data() }));
             } catch (error) {
-                console.error("Firebase getAll error, falling back to local:", error);
                 return this._getAllLocal();
             }
         } else {
@@ -120,18 +108,15 @@ const Storage = {
     },
 
     _getAllLocal() {
-        const certs = JSON.parse(localStorage.getItem("certifo_certs") || "[]");
+        const certs = JSON.parse(localStorage.getItem("ellectra_certs") || "[]");
         return certs.reverse();
     },
 
-    // --- DELETE CERTIFICATE ---
     async remove(id) {
         if (useFirebase) {
             try {
                 await db.collection("certificates").doc(id).delete();
-                console.log("🗑️ Deleted from Firebase:", id);
             } catch (error) {
-                console.error("Firebase delete error:", error);
                 this._removeLocal(id);
             }
         } else {
@@ -140,13 +125,11 @@ const Storage = {
     },
 
     _removeLocal(id) {
-        let certs = JSON.parse(localStorage.getItem("certifo_certs") || "[]");
+        let certs = JSON.parse(localStorage.getItem("ellectra_certs") || "[]");
         certs = certs.filter(c => c._localId !== id);
-        localStorage.setItem("certifo_certs", JSON.stringify(certs));
-        console.log("🗑️ Deleted from localStorage:", id);
+        localStorage.setItem("ellectra_certs", JSON.stringify(certs));
     },
 
-    // --- CLEAR ALL ---
     async clearAll() {
         if (useFirebase) {
             try {
@@ -154,18 +137,14 @@ const Storage = {
                 const batch = db.batch();
                 snapshot.docs.forEach(doc => batch.delete(doc.ref));
                 await batch.commit();
-                console.log("🗑️ All certificates deleted from Firebase");
             } catch (error) {
-                console.error("Firebase clearAll error:", error);
-                localStorage.removeItem("certifo_certs");
+                localStorage.removeItem("ellectra_certs");
             }
         } else {
-            localStorage.removeItem("certifo_certs");
-            console.log("🗑️ All certificates deleted from localStorage");
+            localStorage.removeItem("ellectra_certs");
         }
     },
 
-    // --- COUNT ---
     async count() {
         const all = await this.getAll();
         return all.length;
@@ -173,37 +152,29 @@ const Storage = {
 };
 
 // ═══════════════════════════════════════════
-//  APPLICATION STATE
+// APPLICATION STATE
 // ═══════════════════════════════════════════
 let currentTemplate = "classic";
+let currentCertFor = "participant"; // "participant" or "winner"
 let allCertificates = [];
-let downloadCount = parseInt(localStorage.getItem("certifo_downloads") || "0");
+let downloadCount = parseInt(localStorage.getItem("ellectra_downloads") || "0");
 let currentViewCert = null;
 
 // ═══════════════════════════════════════════
-//  INITIALIZATION
+// INITIALIZATION
 // ═══════════════════════════════════════════
 document.addEventListener("DOMContentLoaded", async () => {
+    initFirebase();
 
-    // Initialize Firebase
-    const fbReady = initFirebase();
-
-    // Set default date to today
-    document.getElementById("issueDate").value = todayISO();
-
-    // Initial preview update
+    document.getElementById("workshopDate").value = todayISO();
     updatePreview();
-
-    // Scale certificate preview
     scalePreview();
     window.addEventListener("resize", scalePreview);
 
-    // Nav toggle (mobile)
     document.getElementById("navToggle").addEventListener("click", () => {
         document.getElementById("navLinks").classList.toggle("open");
     });
 
-    // Nav links
     document.querySelectorAll(".nav-link").forEach(link => {
         link.addEventListener("click", (e) => {
             e.preventDefault();
@@ -212,41 +183,31 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     });
 
-    // Close modal on overlay click
     document.getElementById("modalOverlay").addEventListener("click", (e) => {
         if (e.target === e.currentTarget) closeModal();
     });
 
-    // Close modal on Escape key
     document.addEventListener("keydown", (e) => {
         if (e.key === "Escape") closeModal();
     });
 
-    // Load initial data
     await refreshData();
 
-    // Hide loading screen
     setTimeout(() => {
         document.getElementById("loading-screen").classList.add("hidden");
     }, 1200);
-
-    console.log("🏆 Certifo Maker initialized successfully!");
-    console.log("📦 Database:", useFirebase ? "Firebase Firestore" : "localStorage");
 });
 
 // ═══════════════════════════════════════════
-//  NAVIGATION
+// NAVIGATION
 // ═══════════════════════════════════════════
 function showSection(name) {
-    // Hide all sections
     document.querySelectorAll(".page-section").forEach(s => s.classList.remove("active"));
     document.querySelectorAll(".nav-link").forEach(l => l.classList.remove("active"));
 
-    // Show target section
     document.getElementById("section-" + name).classList.add("active");
     document.querySelector(`.nav-link[data-section="${name}"]`).classList.add("active");
 
-    // Section-specific actions
     if (name === "history") loadHistory();
     if (name === "dashboard") refreshData();
     if (name === "create") {
@@ -254,53 +215,116 @@ function showSection(name) {
         updatePreview();
     }
 
-    // Scroll to top
     window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 // ═══════════════════════════════════════════
-//  TEMPLATE SELECTION
+// CERTIFICATE FOR SELECTION (Participant / Winner)
 // ═══════════════════════════════════════════
-function selectTemplate(name) {
-    currentTemplate = name;
+function selectCertFor(type) {
+    currentCertFor = type;
 
-    // Update UI
-    document.querySelectorAll(".template-option").forEach(o => o.classList.remove("active"));
-    document.querySelector(`.template-option[data-template="${name}"]`).classList.add("active");
+    document.querySelectorAll(".cert-type-option").forEach(o => o.classList.remove("active"));
+    document.querySelector(`.cert-type-option[data-certfor="${type}"]`).classList.add("active");
+
+    // Show/hide winner position
+    const winnerGroup = document.getElementById("winnerPositionGroup");
+    winnerGroup.style.display = type === "winner" ? "block" : "none";
 
     // Update certificate class
     const cert = document.getElementById("certificatePreview");
-    cert.className = "certificate template-" + name;
+    if (type === "winner") {
+        cert.classList.remove("cert-participant");
+        cert.classList.add("cert-winner");
+    } else {
+        cert.classList.remove("cert-winner");
+        cert.classList.add("cert-participant");
+    }
 
     updatePreview();
 }
 
 // ═══════════════════════════════════════════
-//  LIVE PREVIEW
+// TEMPLATE SELECTION
+// ═══════════════════════════════════════════
+function selectTemplate(name) {
+    currentTemplate = name;
+
+    document.querySelectorAll(".template-option").forEach(o => o.classList.remove("active"));
+    document.querySelector(`.template-option[data-template="${name}"]`).classList.add("active");
+
+    const cert = document.getElementById("certificatePreview");
+    // Preserve cert-winner or cert-participant class
+    const isWinner = cert.classList.contains("cert-winner");
+    cert.className = `certificate template-${name} ${isWinner ? 'cert-winner' : 'cert-participant'}`;
+
+    updatePreview();
+}
+
+// ═══════════════════════════════════════════
+// LIVE PREVIEW
 // ═══════════════════════════════════════════
 function updatePreview() {
-    const recipientName = document.getElementById("recipientName").value || "Recipient Name";
-    const courseName = document.getElementById("courseName").value || "Course / Program Name";
+    const recipientName = document.getElementById("recipientName").value || "Participant Name";
+    const workshopType = document.getElementById("workshopType").value || "Workshop";
+    const workshopName = document.getElementById("workshopName").value || "Workshop Name";
+    const institutionName = document.getElementById("institutionName").value || "Institution Name";
     const description = document.getElementById("description").value || "";
-    const issueDate = document.getElementById("issueDate").value;
-    const issuerName = document.getElementById("issuerName").value || "Issuer Name";
-    const issuerTitle = document.getElementById("issuerTitle").value || "Authorized Signatory";
-    const orgName = document.getElementById("orgName").value || "Your Organization";
-    const certType = document.getElementById("certType").value;
+    const workshopDate = document.getElementById("workshopDate").value;
+    const issuerName = document.getElementById("issuerName").value || "Signer Name";
+    const issuerTitle = document.getElementById("issuerTitle").value || "Workshop Coordinator";
+    const orgName = document.getElementById("orgName").value || "Ellectra";
 
     document.getElementById("prevName").textContent = recipientName;
-    document.getElementById("prevCourse").textContent = courseName;
+    document.getElementById("prevWorkshopName").textContent = workshopName;
     document.getElementById("prevDesc").textContent = description;
     document.getElementById("prevIssuer").textContent = issuerName;
     document.getElementById("prevIssuerTitle").textContent = issuerTitle;
     document.getElementById("prevOrg").textContent = orgName;
-    document.getElementById("prevType").textContent = "OF " + certType.toUpperCase();
-    document.getElementById("prevDate").textContent = issueDate ? formatDate(issueDate) : "Date";
+    document.getElementById("prevDate").textContent = workshopDate ? formatDate(workshopDate) : "Date";
     document.getElementById("prevId").textContent = "ID: " + generateCertId();
+
+    // Workshop type label
+    document.getElementById("prevWorkshopType").textContent = workshopType + " Certificate";
+
+    // Institution
+    document.getElementById("prevInstitution").textContent = "Conducted at: " + institutionName;
+
+    // Cert type (participation vs winner)
+    if (currentCertFor === "winner") {
+        const winnerPos = document.getElementById("winnerPosition").value;
+        document.getElementById("prevType").textContent = "OF ACHIEVEMENT";
+        
+        // Update or create winner position element
+        let posEl = document.getElementById("prevWinnerPosition");
+        if (!posEl) {
+            posEl = document.createElement("div");
+            posEl.id = "prevWinnerPosition";
+            posEl.className = "cert-winner-position";
+            const certBody = document.querySelector("#certificatePreview .cert-body");
+            certBody.insertBefore(posEl, certBody.querySelector(".cert-presented"));
+        }
+        posEl.textContent = "🏆 " + winnerPos;
+        posEl.style.display = "inline-block";
+
+        // Change "for" text
+        document.querySelector("#certificatePreview .cert-for").textContent = "for outstanding achievement in the workshop";
+
+        // Change seal
+        document.querySelector("#certificatePreview .cert-seal-inner").textContent = "🏆";
+    } else {
+        document.getElementById("prevType").textContent = "OF PARTICIPATION";
+        
+        let posEl = document.getElementById("prevWinnerPosition");
+        if (posEl) posEl.style.display = "none";
+
+        document.querySelector("#certificatePreview .cert-for").textContent = "for successfully participating in the workshop";
+        document.querySelector("#certificatePreview .cert-seal-inner").textContent = "⚡";
+    }
 }
 
 // ═══════════════════════════════════════════
-//  PREVIEW SCALING (Responsive)
+// PREVIEW SCALING
 // ═══════════════════════════════════════════
 function scalePreview() {
     const container = document.getElementById("previewContainer");
@@ -318,75 +342,69 @@ function scalePreview() {
 }
 
 // ═══════════════════════════════════════════
-//  GENERATE PDF & SAVE TO DATABASE
+// GENERATE PDF & SAVE
 // ═══════════════════════════════════════════
 async function generateAndSave() {
-    // Validation
     const recipientName = document.getElementById("recipientName").value.trim();
-    const courseName = document.getElementById("courseName").value.trim();
-    const issueDate = document.getElementById("issueDate").value;
+    const workshopType = document.getElementById("workshopType").value.trim();
+    const workshopName = document.getElementById("workshopName").value.trim();
+    const institutionName = document.getElementById("institutionName").value.trim();
+    const workshopDate = document.getElementById("workshopDate").value;
     const issuerName = document.getElementById("issuerName").value.trim();
-    const orgName = document.getElementById("orgName").value.trim();
 
     const errors = [];
-    if (!recipientName) errors.push("Recipient Name");
-    if (!courseName) errors.push("Course / Program");
-    if (!issueDate) errors.push("Issue Date");
-    if (!issuerName) errors.push("Issuer Name");
-    if (!orgName) errors.push("Organization");
+    if (!recipientName) errors.push("Participant/Winner Name");
+    if (!workshopType) errors.push("Workshop Type");
+    if (!workshopName) errors.push("Workshop Name");
+    if (!institutionName) errors.push("Institution/School");
+    if (!workshopDate) errors.push("Workshop Date");
+    if (!issuerName) errors.push("Signed By");
 
     if (errors.length > 0) {
         showToast(`Please fill: ${errors.join(", ")}`, "error");
         return;
     }
 
-    // UI feedback
     const btn = document.getElementById("btnGenerate");
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span> Generating PDF...';
 
     try {
         const certId = generateCertId();
-        const certType = document.getElementById("certType").value;
         const description = document.getElementById("description").value.trim();
-        const issuerTitle = document.getElementById("issuerTitle").value.trim() || "Authorized Signatory";
+        const issuerTitle = document.getElementById("issuerTitle").value.trim() || "Workshop Coordinator";
+        const orgName = document.getElementById("orgName").value.trim() || "Ellectra";
+        const winnerPosition = currentCertFor === "winner" ? document.getElementById("winnerPosition").value : "";
 
-        // Update preview with final cert ID
         document.getElementById("prevId").textContent = "ID: " + certId;
-
-        // Wait a frame for DOM update
         await delay(100);
 
-        // Build certificate data
         const certData = {
             certId,
             recipientName,
-            courseName,
+            workshopType,
+            workshopName,
+            institutionName,
             description,
-            issueDate,
+            workshopDate,
             issuerName,
             issuerTitle,
             orgName,
-            certType,
+            certFor: currentCertFor,
+            winnerPosition,
             template: currentTemplate
         };
 
-        // 1. Save to database
         showToast("Saving to database...", "info");
-        const savedId = await Storage.save(certData);
+        await Storage.save(certData);
 
-        // 2. Generate & download PDF
         showToast("Generating PDF...", "info");
         await generatePDF(certId, recipientName);
 
-        // 3. Update download count
         downloadCount++;
-        localStorage.setItem("certifo_downloads", downloadCount.toString());
+        localStorage.setItem("ellectra_downloads", downloadCount.toString());
 
-        // 4. Success!
         showToast(`✅ Certificate "${certId}" saved & PDF downloaded!`, "success");
-
-        // 5. Refresh data
         await refreshData();
 
     } catch (err) {
@@ -399,30 +417,27 @@ async function generateAndSave() {
 }
 
 // ═══════════════════════════════════════════
-//  PDF GENERATION ENGINE
+// PDF GENERATION ENGINE
 // ═══════════════════════════════════════════
 async function generatePDF(certId, recipientName) {
     const cert = document.getElementById("certificatePreview");
     const scaler = document.getElementById("previewScaler");
     const container = document.getElementById("previewContainer");
 
-    // Save current state
     const savedTransform = scaler.style.transform;
     const savedHeight = container.style.height;
 
-    // Set to full size for high-quality capture
     scaler.style.transform = "scale(1)";
     container.style.height = "auto";
     container.style.overflow = "visible";
 
-    // Wait for fonts and rendering
     await document.fonts.ready;
     await delay(500);
 
-    // Capture certificate as canvas
     const canvas = await html2canvas(cert, {
         scale: 3,
         useCORS: true,
+        allowTaint: true,
         logging: false,
         backgroundColor: null,
         width: 800,
@@ -431,23 +446,16 @@ async function generatePDF(certId, recipientName) {
         windowHeight: 566
     });
 
-    // Restore original state
     scaler.style.transform = savedTransform;
     container.style.height = savedHeight;
     container.style.overflow = "auto";
 
-    // Generate PDF
     const imgData = canvas.toDataURL("image/png", 1.0);
     const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
 
-    const pdf = new jsPDF({
-        orientation: "landscape",
-        unit: "mm",
-        format: "a4"
-    });
-
-    const pageW = pdf.internal.pageSize.getWidth();   // 297mm
-    const pageH = pdf.internal.pageSize.getHeight();   // 210mm
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
     const margin = 8;
     const availW = pageW - 2 * margin;
     const availH = pageH - 2 * margin;
@@ -466,35 +474,42 @@ async function generatePDF(certId, recipientName) {
     const y = (pageH - imgH) / 2;
 
     pdf.addImage(imgData, "PNG", x, y, imgW, imgH);
-
-    // Set PDF metadata
     pdf.setProperties({
-        title: `Certificate - ${recipientName}`,
+        title: `Workshop Certificate - ${recipientName}`,
         subject: `Certificate ID: ${certId}`,
-        author: "Certifo Maker",
-        creator: "Certifo Maker"
+        author: "Ellectra",
+        creator: "Ellectra Workshop Certificate Generator"
     });
 
-    // Download PDF
     const filename = `${certId}_${recipientName.replace(/\s+/g, "_")}.pdf`;
     pdf.save(filename);
-
     return filename;
 }
 
 // ═══════════════════════════════════════════
-//  VIEW & REDOWNLOAD CERTIFICATE
+// VIEW & REDOWNLOAD CERTIFICATE
 // ═══════════════════════════════════════════
 function viewCertificate(certDataJSON) {
     const certData = JSON.parse(decodeURIComponent(certDataJSON));
     currentViewCert = certData;
 
-    // Build certificate HTML in modal
+    const isWinner = certData.certFor === "winner";
     const modalScaler = document.getElementById("modalPreviewScaler");
 
+    const winnerPositionHtml = isWinner ? 
+        `<div class="cert-winner-position">🏆 ${escapeHtml(certData.winnerPosition || 'Winner')}</div>` : '';
+    
+    const forText = isWinner ? 
+        'for outstanding achievement in the workshop' : 
+        'for successfully participating in the workshop';
+    
+    const sealIcon = isWinner ? '🏆' : '⚡';
+    const certOfText = isWinner ? 'OF ACHIEVEMENT' : 'OF PARTICIPATION';
+    const certClass = isWinner ? 'cert-winner' : 'cert-participant';
+
     modalScaler.innerHTML = `
-        <div class="certificate template-${certData.template}" id="modalCertificate">
-            <div class="cert-watermark">★</div>
+        <div class="certificate template-${certData.template} ${certClass}" id="modalCertificate">
+            <div class="cert-watermark">⚡</div>
             <div class="cert-outer">
                 <div class="cert-inner">
                     <div class="cert-corner cert-tl">❖</div>
@@ -503,23 +518,28 @@ function viewCertificate(certDataJSON) {
                     <div class="cert-corner cert-br">❖</div>
 
                     <div class="cert-header">
-                        <div class="cert-org-name">${escapeHtml(certData.orgName || 'Organization')}</div>
-                        <div class="cert-star">★</div>
+                        <div class="cert-logo-row">
+                            <img src="https://raw.githubusercontent.com/pprojectcentreee/Ellectra/main/Ellectra_w01wap%20(2).png" alt="Ellectra" class="cert-logo-img" crossorigin="anonymous">
+                        </div>
+                        <div class="cert-org-name">${escapeHtml(certData.orgName || 'Ellectra')}</div>
+                        <div class="cert-workshop-type-label">${escapeHtml(certData.workshopType || 'Workshop')} Certificate</div>
                         <h1 class="cert-title">CERTIFICATE</h1>
-                        <div class="cert-of">OF ${(certData.certType || 'Achievement').toUpperCase()}</div>
+                        <div class="cert-of">${certOfText}</div>
                         <div class="cert-line-deco">
                             <span class="line-side"></span>
-                            <span class="line-diamond">◆</span>
+                            <span class="line-diamond">⚡</span>
                             <span class="line-side"></span>
                         </div>
                     </div>
 
                     <div class="cert-body">
+                        ${winnerPositionHtml}
                         <p class="cert-presented">This certificate is proudly presented to</p>
                         <h2 class="cert-recipient">${escapeHtml(certData.recipientName)}</h2>
                         <div class="cert-underline"></div>
-                        <p class="cert-for">for successfully completing</p>
-                        <h3 class="cert-course">${escapeHtml(certData.courseName)}</h3>
+                        <p class="cert-for">${forText}</p>
+                        <h3 class="cert-course">${escapeHtml(certData.workshopName || certData.courseName || '')}</h3>
+                        <p class="cert-institution">Conducted at: ${escapeHtml(certData.institutionName || '')}</p>
                         <p class="cert-desc">${escapeHtml(certData.description || '')}</p>
                     </div>
 
@@ -527,17 +547,17 @@ function viewCertificate(certDataJSON) {
                         <div class="cert-sign-block">
                             <div class="cert-sign-line"></div>
                             <p class="cert-sign-name">${escapeHtml(certData.issuerName)}</p>
-                            <p class="cert-sign-role">${escapeHtml(certData.issuerTitle || 'Authorized Signatory')}</p>
+                            <p class="cert-sign-role">${escapeHtml(certData.issuerTitle || 'Workshop Coordinator')}</p>
                         </div>
                         <div class="cert-seal-block">
                             <div class="cert-seal">
-                                <div class="cert-seal-inner">★</div>
+                                <div class="cert-seal-inner">${sealIcon}</div>
                             </div>
                         </div>
                         <div class="cert-date-block">
                             <div class="cert-sign-line"></div>
-                            <p class="cert-date-val">${formatDate(certData.issueDate)}</p>
-                            <p class="cert-sign-role">Date of Issue</p>
+                            <p class="cert-date-val">${formatDate(certData.workshopDate || certData.issueDate)}</p>
+                            <p class="cert-sign-role">Workshop Date</p>
                         </div>
                     </div>
 
@@ -547,7 +567,6 @@ function viewCertificate(certDataJSON) {
         </div>
     `;
 
-    // Scale modal certificate
     const modalContainer = document.getElementById("modalPreviewContainer");
     setTimeout(() => {
         const availableWidth = modalContainer.clientWidth - 30;
@@ -557,7 +576,6 @@ function viewCertificate(certDataJSON) {
         modalContainer.style.height = (566 * scale + 30) + "px";
     }, 100);
 
-    // Show modal
     document.getElementById("modalOverlay").classList.add("active");
     document.body.style.overflow = "hidden";
 }
@@ -578,8 +596,6 @@ async function redownloadPDF() {
     try {
         const cert = document.getElementById("modalCertificate");
         const modalScaler = document.getElementById("modalPreviewScaler");
-
-        // Set full size
         const savedTransform = modalScaler.style.transform;
         modalScaler.style.transform = "scale(1)";
 
@@ -589,13 +605,13 @@ async function redownloadPDF() {
         const canvas = await html2canvas(cert, {
             scale: 3,
             useCORS: true,
+            allowTaint: true,
             logging: false,
             backgroundColor: null,
             width: 800,
             height: 566
         });
 
-        // Restore
         modalScaler.style.transform = savedTransform;
 
         const imgData = canvas.toDataURL("image/png", 1.0);
@@ -622,18 +638,16 @@ async function redownloadPDF() {
         const y = (pageH - imgH) / 2;
 
         pdf.addImage(imgData, "PNG", x, y, imgW, imgH);
-
         pdf.setProperties({
-            title: `Certificate - ${currentViewCert.recipientName}`,
+            title: `Workshop Certificate - ${currentViewCert.recipientName}`,
             subject: `Certificate ID: ${currentViewCert.certId}`,
-            author: "Certifo Maker"
+            author: "Ellectra"
         });
 
         pdf.save(`${currentViewCert.certId}_${currentViewCert.recipientName.replace(/\s+/g, "_")}.pdf`);
 
         downloadCount++;
-        localStorage.setItem("certifo_downloads", downloadCount.toString());
-
+        localStorage.setItem("ellectra_downloads", downloadCount.toString());
         showToast("PDF downloaded successfully!", "success");
 
     } catch (err) {
@@ -646,19 +660,15 @@ async function redownloadPDF() {
 }
 
 // ═══════════════════════════════════════════
-//  HISTORY MANAGEMENT
+// HISTORY MANAGEMENT
 // ═══════════════════════════════════════════
 async function loadHistory() {
     try {
         allCertificates = await Storage.getAll();
         renderHistory(allCertificates);
-
-        // Show/hide clear all button
         const clearBtn = document.getElementById("btnClearAll");
         clearBtn.style.display = allCertificates.length > 0 ? "inline-flex" : "none";
-
     } catch (err) {
-        console.error("History load error:", err);
         showToast("Failed to load history.", "error");
     }
 }
@@ -666,7 +676,6 @@ async function loadHistory() {
 function renderHistory(certs) {
     const tbody = document.getElementById("historyBody");
     const empty = document.getElementById("historyEmpty");
-
     document.getElementById("historyCount").textContent = certs.length + " record" + (certs.length !== 1 ? "s" : "");
 
     if (certs.length === 0) {
@@ -676,37 +685,39 @@ function renderHistory(certs) {
     }
 
     empty.style.display = "none";
-
     tbody.innerHTML = certs.map((c, index) => {
         const id = c._docId || c._localId;
         const certDataEncoded = encodeURIComponent(JSON.stringify(c));
+        const isWinner = c.certFor === "winner";
+        const typeBadge = isWinner
+            ? `<span class="cert-type-badge winner"><i class="fas fa-trophy"></i> Winner</span>`
+            : `<span class="cert-type-badge participant"><i class="fas fa-user-check"></i> Participant</span>`;
 
         return `
-        <tr>
-            <td>${index + 1}</td>
-            <td><strong>${escapeHtml(c.certId)}</strong></td>
-            <td><span class="text-truncate">${escapeHtml(c.recipientName)}</span></td>
-            <td><span class="text-truncate">${escapeHtml(c.courseName)}</span></td>
-            <td>${escapeHtml(c.orgName || '-')}</td>
-            <td>${formatDate(c.issueDate)}</td>
-            <td><span class="template-badge ${c.template}">${c.template}</span></td>
-            <td>
-                <div class="action-btns">
-                    <button class="btn btn-info btn-sm" onclick="viewCertificate('${certDataEncoded}')" title="View & Download">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                    <button class="btn btn-danger btn-sm" onclick="deleteCert('${id}')" title="Delete">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </td>
-        </tr>`;
+            <tr>
+                <td>${index + 1}</td>
+                <td><strong>${escapeHtml(c.certId)}</strong></td>
+                <td><span class="text-truncate">${escapeHtml(c.recipientName)}</span></td>
+                <td><span class="text-truncate">${escapeHtml(c.workshopName || c.courseName || '')}</span></td>
+                <td>${escapeHtml(c.institutionName || c.orgName || '-')}</td>
+                <td>${formatDate(c.workshopDate || c.issueDate)}</td>
+                <td>${typeBadge}</td>
+                <td>
+                    <div class="action-btns">
+                        <button class="btn btn-info btn-sm" onclick="viewCertificate('${certDataEncoded}')" title="View & Download">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteCert('${id}')" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>`;
     }).join("");
 }
 
 function searchCertificates() {
     const query = document.getElementById("searchInput").value.toLowerCase().trim();
-
     if (!query) {
         renderHistory(allCertificates);
         return;
@@ -715,9 +726,10 @@ function searchCertificates() {
     const filtered = allCertificates.filter(c =>
         c.certId.toLowerCase().includes(query) ||
         c.recipientName.toLowerCase().includes(query) ||
-        c.courseName.toLowerCase().includes(query) ||
-        (c.orgName || "").toLowerCase().includes(query) ||
-        (c.certType || "").toLowerCase().includes(query) ||
+        (c.workshopName || c.courseName || "").toLowerCase().includes(query) ||
+        (c.institutionName || "").toLowerCase().includes(query) ||
+        (c.workshopType || "").toLowerCase().includes(query) ||
+        (c.certFor || "").toLowerCase().includes(query) ||
         (c.issuerName || "").toLowerCase().includes(query)
     );
 
@@ -725,15 +737,13 @@ function searchCertificates() {
 }
 
 async function deleteCert(id) {
-    if (!confirm("Are you sure you want to delete this certificate record?\n\nThis action cannot be undone.")) return;
-
+    if (!confirm("Are you sure you want to delete this certificate record?")) return;
     try {
         await Storage.remove(id);
         showToast("Certificate record deleted.", "info");
         await loadHistory();
         await refreshData();
     } catch (err) {
-        console.error("Delete error:", err);
         showToast("Delete failed: " + err.message, "error");
     }
 }
@@ -749,33 +759,29 @@ async function clearAllCerts() {
         await loadHistory();
         await refreshData();
     } catch (err) {
-        console.error("Clear all error:", err);
         showToast("Failed to clear: " + err.message, "error");
     }
 }
 
 // ═══════════════════════════════════════════
-//  DASHBOARD
+// DASHBOARD
 // ═══════════════════════════════════════════
 async function refreshData() {
     try {
         allCertificates = await Storage.getAll();
         const total = allCertificates.length;
 
-        // Count certificates created today
         const todayStr = todayISO();
         const todayCount = allCertificates.filter(c => {
-            return (c.issueDate === todayStr) ||
-                   (c.createdAtLocal && c.createdAtLocal.startsWith(todayStr));
+            return (c.workshopDate === todayStr || c.issueDate === todayStr) ||
+                (c.createdAtLocal && c.createdAtLocal.startsWith(todayStr));
         }).length;
 
-        // Update stats
         document.getElementById("statTotal").textContent = total;
         document.getElementById("statToday").textContent = todayCount;
         document.getElementById("statDownloads").textContent = downloadCount;
         document.getElementById("historyBadge").textContent = total;
 
-        // Recent certificates table (last 5)
         const recent = allCertificates.slice(0, 5);
         const recentBody = document.getElementById("recentBody");
         const recentEmpty = document.getElementById("recentEmpty");
@@ -785,16 +791,22 @@ async function refreshData() {
             recentEmpty.style.display = "block";
         } else {
             recentEmpty.style.display = "none";
-            recentBody.innerHTML = recent.map(c => `
-                <tr>
-                    <td><strong>${escapeHtml(c.certId)}</strong></td>
-                    <td>${escapeHtml(c.recipientName)}</td>
-                    <td><span class="text-truncate">${escapeHtml(c.courseName)}</span></td>
-                    <td>${escapeHtml(c.orgName || '-')}</td>
-                    <td>${formatDate(c.issueDate)}</td>
-                    <td><span class="template-badge ${c.template}">${c.template}</span></td>
-                </tr>
-            `).join("");
+            recentBody.innerHTML = recent.map(c => {
+                const isWinner = c.certFor === "winner";
+                const typeBadge = isWinner
+                    ? `<span class="cert-type-badge winner"><i class="fas fa-trophy"></i> Winner</span>`
+                    : `<span class="cert-type-badge participant"><i class="fas fa-user-check"></i> Participant</span>`;
+                return `
+                    <tr>
+                        <td><strong>${escapeHtml(c.certId)}</strong></td>
+                        <td>${escapeHtml(c.recipientName)}</td>
+                        <td><span class="text-truncate">${escapeHtml(c.workshopName || c.courseName || '')}</span></td>
+                        <td>${escapeHtml(c.institutionName || c.orgName || '-')}</td>
+                        <td>${formatDate(c.workshopDate || c.issueDate)}</td>
+                        <td>${typeBadge}</td>
+                    </tr>
+                `;
+            }).join("");
         }
     } catch (err) {
         console.error("Dashboard refresh error:", err);
@@ -802,26 +814,28 @@ async function refreshData() {
 }
 
 // ═══════════════════════════════════════════
-//  FORM MANAGEMENT
+// FORM MANAGEMENT
 // ═══════════════════════════════════════════
 function clearForm() {
     document.getElementById("recipientName").value = "";
-    document.getElementById("courseName").value = "";
+    document.getElementById("workshopType").value = "";
+    document.getElementById("workshopName").value = "";
+    document.getElementById("institutionName").value = "";
     document.getElementById("description").value = "";
-    document.getElementById("issueDate").value = todayISO();
+    document.getElementById("workshopDate").value = todayISO();
     document.getElementById("issuerName").value = "";
-    document.getElementById("issuerTitle").value = "Authorized Signatory";
-    document.getElementById("orgName").value = "";
-    document.getElementById("certType").value = "Achievement";
+    document.getElementById("issuerTitle").value = "Workshop Coordinator";
+    document.getElementById("orgName").value = "Ellectra";
+    document.getElementById("winnerPosition").value = "1st Place";
 
+    selectCertFor("participant");
     selectTemplate("classic");
     updatePreview();
-
     showToast("Form cleared.", "info");
 }
 
 // ═══════════════════════════════════════════
-//  UTILITY FUNCTIONS
+// UTILITY FUNCTIONS
 // ═══════════════════════════════════════════
 function generateCertId() {
     const now = new Date();
@@ -829,7 +843,7 @@ function generateCertId() {
         String(now.getMonth() + 1).padStart(2, "0") +
         String(now.getDate()).padStart(2, "0");
     const rand = String(Math.floor(Math.random() * 10000)).padStart(4, "0");
-    return `CERT-${dateStr}-${rand}`;
+    return `ELLEC-${dateStr}-${rand}`;
 }
 
 function todayISO() {
@@ -866,7 +880,6 @@ function delay(ms) {
 
 function showToast(message, type = "info") {
     const container = document.getElementById("toast-container");
-
     const toast = document.createElement("div");
     toast.className = `toast toast-${type}`;
 
@@ -880,7 +893,6 @@ function showToast(message, type = "info") {
     toast.innerHTML = `<i class="fas fa-${icons[type] || 'info-circle'}"></i> ${message}`;
     container.appendChild(toast);
 
-    // Auto-remove after 4 seconds
     setTimeout(() => {
         toast.classList.add("fade-out");
         setTimeout(() => {
