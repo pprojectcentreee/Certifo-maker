@@ -1,5 +1,5 @@
 /* ============================================
-   CERTIFO MAKER — Complete Stylesheet
+   ELLECTRA — Workshop Certificate Generator Stylesheet
    ============================================ */
 
 /* ---------- CSS VARIABLES ---------- */
@@ -24,6 +24,10 @@
     --radius-sm: 8px;
     --transition: all 0.3s ease;
     --gradient: linear-gradient(135deg, var(--primary), var(--secondary));
+    --gold: #D4AF37;
+    --gold-dark: #B8860B;
+    --winner-gradient: linear-gradient(135deg, #FFD700, #FFA500, #FF6347);
+    --participant-gradient: linear-gradient(135deg, #667eea, #764ba2);
 }
 
 /* ---------- RESET ---------- */
@@ -33,9 +37,7 @@
     padding: 0;
 }
 
-html {
-    scroll-behavior: smooth;
-}
+html { scroll-behavior: smooth; }
 
 body {
     font-family: 'Montserrat', sans-serif;
@@ -80,7 +82,7 @@ select { cursor: pointer; }
 #loading-screen {
     position: fixed;
     inset: 0;
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -100,14 +102,27 @@ select { cursor: pointer; }
 }
 
 .loader-icon {
-    font-size: 70px;
     margin-bottom: 20px;
+}
+
+.loader-logo-img {
+    width: 120px;
+    height: 120px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 20px rgba(102,126,234,0.5));
+    animation: logoPulse 2s ease-in-out infinite;
+}
+
+@keyframes logoPulse {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 20px rgba(102,126,234,0.5)); }
+    50% { transform: scale(1.1); filter: drop-shadow(0 0 40px rgba(102,126,234,0.8)); }
 }
 
 .loader-content h2 {
     font-size: 32px;
     margin-bottom: 8px;
-    letter-spacing: 2px;
+    letter-spacing: 4px;
+    font-family: 'Poppins', sans-serif;
 }
 
 .loader-content p {
@@ -128,7 +143,7 @@ select { cursor: pointer; }
 .loader-fill {
     width: 40%;
     height: 100%;
-    background: #fff;
+    background: var(--gold);
     border-radius: 4px;
     animation: loaderAnim 1.5s ease infinite;
 }
@@ -242,9 +257,7 @@ select { cursor: pointer; }
     color: #fff;
 }
 
-.modal-body {
-    padding: 25px;
-}
+.modal-body { padding: 25px; }
 
 .modal-preview-container {
     background: #e8e8e8;
@@ -265,7 +278,7 @@ select { cursor: pointer; }
 
 /* ---------- NAVBAR ---------- */
 .navbar {
-    background: var(--gradient);
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
     padding: 0 30px;
     display: flex;
     align-items: center;
@@ -273,7 +286,7 @@ select { cursor: pointer; }
     position: sticky;
     top: 0;
     z-index: 10000;
-    box-shadow: 0 4px 20px rgba(102,126,234,0.35);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.35);
 }
 
 .nav-brand {
@@ -284,10 +297,16 @@ select { cursor: pointer; }
     font-size: 22px;
     font-weight: 700;
     margin-right: 40px;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
+    font-family: 'Poppins', sans-serif;
 }
 
-.nav-brand i { font-size: 26px; }
+.nav-logo-img {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 8px rgba(102,126,234,0.6));
+}
 
 .nav-links {
     display: flex;
@@ -463,10 +482,8 @@ select { cursor: pointer; }
 .stat-card::after {
     content: '';
     position: absolute;
-    top: 0;
-    right: 0;
-    width: 100px;
-    height: 100px;
+    top: 0; right: 0;
+    width: 100px; height: 100px;
     border-radius: 50%;
     opacity: 0.05;
     transform: translate(30%, -30%);
@@ -483,8 +500,7 @@ select { cursor: pointer; }
 }
 
 .stat-icon {
-    width: 58px;
-    height: 58px;
+    width: 58px; height: 58px;
     border-radius: 14px;
     display: flex;
     align-items: center;
@@ -499,15 +515,8 @@ select { cursor: pointer; }
 .stat-templates .stat-icon { background: linear-gradient(135deg, #e17055, #d63031); }
 .stat-downloads .stat-icon { background: linear-gradient(135deg, #fdcb6e, #e17055); }
 
-.stat-info h3 {
-    font-size: 30px;
-    line-height: 1.2;
-}
-
-.stat-info p {
-    font-size: 13px;
-    color: var(--text-light);
-}
+.stat-info h3 { font-size: 30px; line-height: 1.2; }
+.stat-info p { font-size: 13px; color: var(--text-light); }
 
 /* ---------- BUTTONS ---------- */
 .btn {
@@ -592,6 +601,66 @@ select { cursor: pointer; }
     gap: 12px;
     margin-top: 25px;
     flex-wrap: wrap;
+}
+
+/* ---------- CERTIFICATE TYPE SELECTOR ---------- */
+.cert-type-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.cert-type-option {
+    text-align: center;
+    cursor: pointer;
+    padding: 18px 12px;
+    border: 3px solid var(--border);
+    border-radius: var(--radius);
+    transition: var(--transition);
+    font-weight: 600;
+    color: var(--text-light);
+    position: relative;
+    overflow: hidden;
+}
+
+.cert-type-option:hover {
+    border-color: var(--primary);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+}
+
+.cert-type-option.active[data-certfor="participant"] {
+    border-color: #667eea;
+    background: linear-gradient(135deg, rgba(102,126,234,0.08), rgba(118,75,162,0.08));
+    color: #667eea;
+    box-shadow: 0 4px 15px rgba(102,126,234,0.2);
+}
+
+.cert-type-option.active[data-certfor="winner"] {
+    border-color: #D4AF37;
+    background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,165,0,0.08));
+    color: #B8860B;
+    box-shadow: 0 4px 15px rgba(212,175,55,0.3);
+}
+
+.cert-type-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    margin: 0 auto 10px;
+    color: #fff;
+}
+
+.participant-icon {
+    background: var(--participant-gradient);
+}
+
+.winner-icon {
+    background: var(--winner-gradient);
 }
 
 /* ---------- TEMPLATE SELECTOR ---------- */
@@ -755,6 +824,29 @@ select { cursor: pointer; }
 .template-badge.elegant { background: #E8F5E9; color: #2E7D32; }
 .template-badge.royal { background: #F3E5F5; color: #6A1B9A; }
 
+/* Certificate type badges */
+.cert-type-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    letter-spacing: 0.5px;
+}
+
+.cert-type-badge.participant {
+    background: linear-gradient(135deg, rgba(102,126,234,0.15), rgba(118,75,162,0.15));
+    color: #5a67d8;
+}
+
+.cert-type-badge.winner {
+    background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,165,0,0.15));
+    color: #B8860B;
+}
+
 .action-btns {
     display: flex;
     gap: 6px;
@@ -893,7 +985,7 @@ select { cursor: pointer; }
     width: 100%;
     height: 100%;
     border: 2px solid var(--c-secondary);
-    padding: 25px 40px 15px;
+    padding: 15px 40px 12px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -914,10 +1006,24 @@ select { cursor: pointer; }
 .cert-bl { bottom: 6px; left: 10px; transform: scaleY(-1); }
 .cert-br { bottom: 6px; right: 10px; transform: scale(-1); }
 
+/* ---------- Certificate Logo ---------- */
+.cert-logo-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 2px;
+}
+
+.cert-logo-img {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+}
+
 /* Header */
 .cert-header {
     text-align: center;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
 }
 
 .cert-org-name {
@@ -926,20 +1032,22 @@ select { cursor: pointer; }
     letter-spacing: 4px;
     text-transform: uppercase;
     color: var(--c-secondary);
-    margin-bottom: 3px;
+    margin-bottom: 0;
 }
 
-.cert-star {
-    font-size: 30px;
+.cert-workshop-type-label {
+    font-family: var(--c-body);
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
     color: var(--c-accent);
-    display: block;
-    margin-bottom: 0;
-    line-height: 1.2;
+    margin-bottom: 2px;
+    font-weight: 600;
 }
 
 .cert-title {
     font-family: var(--c-title);
-    font-size: 42px;
+    font-size: 36px;
     font-weight: 700;
     color: var(--c-primary);
     letter-spacing: 8px;
@@ -949,11 +1057,11 @@ select { cursor: pointer; }
 
 .cert-of {
     font-family: var(--c-body);
-    font-size: 14px;
+    font-size: 13px;
     letter-spacing: 6px;
     text-transform: uppercase;
     color: var(--c-secondary);
-    margin-top: 3px;
+    margin-top: 2px;
 }
 
 .cert-line-deco {
@@ -961,7 +1069,7 @@ select { cursor: pointer; }
     align-items: center;
     justify-content: center;
     gap: 10px;
-    margin-top: 10px;
+    margin-top: 6px;
 }
 
 .line-side {
@@ -973,7 +1081,7 @@ select { cursor: pointer; }
 
 .line-diamond {
     color: var(--c-secondary);
-    font-size: 10px;
+    font-size: 12px;
 }
 
 /* Body */
@@ -990,15 +1098,15 @@ select { cursor: pointer; }
 
 .cert-presented {
     font-family: var(--c-body);
-    font-size: 13px;
+    font-size: 12px;
     color: var(--c-text);
-    margin-bottom: 5px;
+    margin-bottom: 3px;
     font-style: italic;
 }
 
 .cert-recipient {
     font-family: var(--c-name);
-    font-size: 40px;
+    font-size: 36px;
     color: var(--c-primary);
     margin: 0;
     line-height: 1.2;
@@ -1012,21 +1120,21 @@ select { cursor: pointer; }
     width: 340px;
     height: 2px;
     background: linear-gradient(90deg, transparent, var(--c-secondary), transparent);
-    margin: 5px 0 10px;
+    margin: 3px 0 6px;
 }
 
 .cert-for {
     font-family: var(--c-body);
-    font-size: 13px;
+    font-size: 11px;
     color: var(--c-text);
-    margin-bottom: 5px;
+    margin-bottom: 3px;
 }
 
 .cert-course {
     font-family: var(--c-title);
-    font-size: 18px;
+    font-size: 16px;
     color: var(--c-text);
-    margin: 0 0 5px;
+    margin: 0 0 3px;
     font-weight: 700;
     letter-spacing: 1px;
     max-width: 100%;
@@ -1035,14 +1143,24 @@ select { cursor: pointer; }
     white-space: nowrap;
 }
 
+.cert-institution {
+    font-family: var(--c-body);
+    font-size: 10px;
+    color: var(--c-text);
+    margin: 0 0 3px;
+    font-style: italic;
+    opacity: 0.8;
+    letter-spacing: 0.5px;
+}
+
 .cert-desc {
     font-family: var(--c-body);
-    font-size: 11px;
+    font-size: 10px;
     color: var(--c-text);
     font-style: italic;
-    opacity: 0.75;
+    opacity: 0.7;
     max-width: 520px;
-    line-height: 1.5;
+    line-height: 1.4;
     margin: 0;
 }
 
@@ -1072,7 +1190,7 @@ select { cursor: pointer; }
 
 .cert-sign-name {
     font-family: var(--c-body);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
     color: var(--c-text);
     margin: 0;
@@ -1080,7 +1198,7 @@ select { cursor: pointer; }
 
 .cert-sign-role {
     font-family: var(--c-body);
-    font-size: 9px;
+    font-size: 8px;
     color: var(--c-secondary);
     margin: 0;
     text-transform: uppercase;
@@ -1089,7 +1207,7 @@ select { cursor: pointer; }
 
 .cert-date-val {
     font-family: var(--c-body);
-    font-size: 13px;
+    font-size: 12px;
     color: var(--c-text);
     margin: 0;
 }
@@ -1102,8 +1220,8 @@ select { cursor: pointer; }
 }
 
 .cert-seal {
-    width: 78px;
-    height: 78px;
+    width: 70px;
+    height: 70px;
     border-radius: 50%;
     border: 3px solid var(--c-secondary);
     display: flex;
@@ -1116,15 +1234,15 @@ select { cursor: pointer; }
 .cert-seal::before {
     content: '';
     position: absolute;
-    width: 66px;
-    height: 66px;
+    width: 58px;
+    height: 58px;
     border-radius: 50%;
     border: 2px dashed var(--c-secondary);
     opacity: 0.6;
 }
 
 .cert-seal-inner {
-    font-size: 28px;
+    font-size: 24px;
     color: var(--c-accent);
     z-index: 1;
 }
@@ -1132,77 +1250,236 @@ select { cursor: pointer; }
 /* Certificate ID */
 .cert-id {
     font-family: 'Montserrat', sans-serif;
-    font-size: 8px;
+    font-size: 7px;
     color: var(--c-secondary);
     letter-spacing: 1.5px;
-    margin-top: 10px;
+    margin-top: 6px;
     opacity: 0.6;
+}
+
+/* ============================================
+   WINNER CERTIFICATE DRASTIC CHANGES
+   ============================================ */
+
+/* Winner certificate gets a completely different look */
+.cert-winner .cert-outer {
+    border: 4px solid #B8860B;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 30%, #0f3460 60%, #1a1a2e 100%);
+    padding: 8px;
+}
+
+.cert-winner .cert-inner {
+    border: 2px solid #D4AF37;
+    background: linear-gradient(135deg,
+        rgba(26,26,46,0.95) 0%,
+        rgba(22,33,62,0.95) 30%,
+        rgba(15,52,96,0.9) 60%,
+        rgba(26,26,46,0.95) 100%
+    );
+    position: relative;
+}
+
+/* Winner gold shimmer overlay */
+.cert-winner .cert-inner::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(45deg,
+        transparent 30%,
+        rgba(212,175,55,0.05) 40%,
+        rgba(212,175,55,0.1) 50%,
+        rgba(212,175,55,0.05) 60%,
+        transparent 70%
+    );
+    pointer-events: none;
+    z-index: 0;
+}
+
+.cert-winner .cert-watermark {
+    color: #D4AF37;
+    opacity: 0.05;
+    font-size: 250px;
+}
+
+.cert-winner .cert-corner {
+    color: #D4AF37;
+    font-size: 28px;
+    opacity: 1;
+}
+
+.cert-winner .cert-logo-img {
+    filter: brightness(1.2) drop-shadow(0 0 10px rgba(212,175,55,0.5));
+}
+
+.cert-winner .cert-org-name {
+    color: #D4AF37;
+    letter-spacing: 6px;
+    font-size: 12px;
+}
+
+.cert-winner .cert-workshop-type-label {
+    color: #FFD700;
+    font-size: 10px;
+    letter-spacing: 4px;
+}
+
+.cert-winner .cert-title {
+    color: #FFD700;
+    font-size: 38px;
+    letter-spacing: 10px;
+    text-shadow: 0 2px 10px rgba(255,215,0,0.3);
+}
+
+.cert-winner .cert-of {
+    color: #D4AF37;
+    font-size: 14px;
+    letter-spacing: 8px;
+    font-weight: 700;
+}
+
+/* Winner position badge */
+.cert-winner-position {
+    display: none;
+    font-family: 'Cinzel', serif;
+    font-size: 16px;
+    font-weight: 900;
+    color: #FFD700;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    margin: 4px 0;
+    padding: 4px 20px;
+    border: 2px solid #D4AF37;
+    border-radius: 30px;
+    background: rgba(212,175,55,0.15);
+    text-shadow: 0 1px 5px rgba(255,215,0,0.3);
+}
+
+.cert-winner .cert-winner-position {
+    display: inline-block;
+}
+
+.cert-winner .line-side {
+    background: linear-gradient(90deg, transparent, #D4AF37, transparent);
+}
+
+.cert-winner .line-diamond {
+    color: #FFD700;
+    font-size: 16px;
+}
+
+.cert-winner .cert-presented {
+    color: rgba(255,255,255,0.8);
+    font-size: 12px;
+}
+
+.cert-winner .cert-recipient {
+    color: #FFD700;
+    font-size: 38px;
+    text-shadow: 0 2px 15px rgba(255,215,0,0.4);
+}
+
+.cert-winner .cert-underline {
+    background: linear-gradient(90deg, transparent, #D4AF37, transparent);
+    height: 2px;
+}
+
+.cert-winner .cert-for {
+    color: rgba(255,255,255,0.75);
+}
+
+.cert-winner .cert-course {
+    color: #fff;
+    font-size: 17px;
+}
+
+.cert-winner .cert-institution {
+    color: rgba(255,255,255,0.7);
+}
+
+.cert-winner .cert-desc {
+    color: rgba(255,255,255,0.6);
+}
+
+.cert-winner .cert-sign-line {
+    background: #D4AF37;
+    opacity: 0.6;
+}
+
+.cert-winner .cert-sign-name {
+    color: #fff;
+}
+
+.cert-winner .cert-sign-role {
+    color: #D4AF37;
+}
+
+.cert-winner .cert-date-val {
+    color: #fff;
+}
+
+.cert-winner .cert-seal {
+    border-color: #D4AF37;
+    background: rgba(212,175,55,0.15);
+}
+
+.cert-winner .cert-seal::before {
+    border-color: #D4AF37;
+}
+
+.cert-winner .cert-seal-inner {
+    color: #FFD700;
+    font-size: 26px;
+}
+
+.cert-winner .cert-id {
+    color: #D4AF37;
+}
+
+/* Trophy icon for winner seal */
+.cert-winner .cert-seal-inner::after {
+    content: '';
 }
 
 /* ============================================
    RESPONSIVE DESIGN
    ============================================ */
 @media (max-width: 1100px) {
-    .create-layout {
-        grid-template-columns: 1fr;
-    }
-    .form-panel {
-        position: static;
-    }
+    .create-layout { grid-template-columns: 1fr; }
+    .form-panel { position: static; }
 }
 
 @media (max-width: 768px) {
     .navbar { padding: 0 15px; }
-
     .nav-toggle { display: block; }
 
     .nav-links {
         display: none;
         position: absolute;
-        top: 65px;
-        left: 0;
-        right: 0;
-        background: var(--gradient);
+        top: 65px; left: 0; right: 0;
+        background: linear-gradient(135deg, #1a1a2e, #16213e);
         flex-direction: column;
         padding: 15px;
         box-shadow: var(--shadow-lg);
         z-index: 999;
     }
-
     .nav-links.open { display: flex; }
 
-    .nav-db-status {
-        margin-left: auto;
-        margin-right: 10px;
-    }
-
+    .nav-db-status { margin-left: auto; margin-right: 10px; }
     .container { padding: 20px 15px; }
 
     .section-header {
         flex-direction: column;
         align-items: flex-start;
     }
-
-    .header-actions {
-        width: 100%;
-    }
-
+    .header-actions { width: 100%; }
     .search-box { width: 100%; }
 
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-    }
-
-    .template-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
+    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .template-grid { grid-template-columns: repeat(2, 1fr); }
     .form-row { grid-template-columns: 1fr; }
-
     .preview-container { padding: 10px; }
-
     .modal-content { margin: 10px; }
+    .cert-type-selector { grid-template-columns: 1fr 1fr; }
 }
 
 @media (max-width: 480px) {
@@ -1210,25 +1487,15 @@ select { cursor: pointer; }
     .nav-brand span { font-size: 17px; }
     .btn-lg { padding: 12px 22px; font-size: 14px; }
     .section-header h1 { font-size: 20px; }
-
-    .stat-card {
-        padding: 16px;
-    }
-
-    .stat-icon {
-        width: 48px;
-        height: 48px;
-        font-size: 18px;
-    }
-
+    .stat-card { padding: 16px; }
+    .stat-icon { width: 48px; height: 48px; font-size: 18px; }
     .stat-info h3 { font-size: 24px; }
 }
 
 /* ---------- UTILITIES ---------- */
 .spinner {
     display: inline-block;
-    width: 18px;
-    height: 18px;
+    width: 18px; height: 18px;
     border: 3px solid rgba(255,255,255,0.3);
     border-top-color: #fff;
     border-radius: 50%;
